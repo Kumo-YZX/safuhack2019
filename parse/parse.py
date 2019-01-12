@@ -18,15 +18,15 @@ class parseMsg(object):
         if self.__type == 2:
             rep = self.queryScore(self.__word[2:])
         elif self.__type == 3:
-            rep = self.reportAddress(self.__word[2:45], self.__word[46:])
+            rep = self.reportAddress(self.__word[2:44], self.__word[44:])
         else:
             rep = 'Wrong Format'
         return rep
 
     def judgeType(self):
-        if str.upper(self.__word[0:2]) == 'RE':
+        if str.upper(self.__word[0:2]) == 'QU':
             self.__type = 2
-        elif str.upper(self.__word[0:2]) == 'QU':
+        elif str.upper(self.__word[0:2]) == 'RE':
             self.__type = 3
         else:
             self.__type = 0
@@ -42,4 +42,8 @@ class parseMsg(object):
         return res_msg
 
     def reportAddress(self, address, msg):
-        return 'report function not avilable now.'
+        reportObj = database.reportdb()
+        reportObj.saveOne({"rep_addr":address,
+                           "prove":msg})
+        print 'report of address:[{}] with prove msg [{}] done.'.format(address, msg)
+        return 'Thank You for Your report about address [{}]!'.format(address)
