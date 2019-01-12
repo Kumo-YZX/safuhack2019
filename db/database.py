@@ -59,7 +59,7 @@ class scoredb(dbbase):
             return 2
         res = self.__scores.find_one({"address":address_as_json["address"]})
         print 'db/database.py: query scoredb done'
-        return res
+        return res      #may be None!!
 
     def updateOne(self, score_as_json):
         try:
@@ -71,10 +71,60 @@ class scoredb(dbbase):
         print 'db/database.py: scoredb update one done'
         return 1
 
+
+class reportdb(dbbase):
+
+    def __init__(self):
+        dbbase.__init__(self)
+        self.__reports = self.mydb.reportSet
+        print 'db/database.py: reportdb init done'
+
+    def saveOne(self, report_as_json):
+        try:
+            report_as_json['rep_addr']
+            report_as_json['prove']
+        except KeyError:
+            return 2
+        report_as_json['tag'] = 0
+        self.__reports.insert_one(report_as_json)
+        print 'db/database.py: save one report to database done'
+        return 1
+
+    def readAddr(self, address_as_json):
+        try:
+            address_as_json['rep_addr']
+        except KeyError:
+            return 2
+        res = list(self.__reports.find({"rep_addr":address_as_json['rep_addr']}))
+        if (res is not None) and (not ('do_mark' in address_as_json)):
+            self.__reports.update_many({"rep_addr":address_as_json['rep_addr']}, {'$set':{'tag':1}})
+            print 'db/database.py: read report done with tag set to 1'
+            return res
+        else:
+            return res #may be None!!
+
+    def searchAddr(self, address_as_json):
+        try:
+            address_as_json['rep_addr']
+        except KeyError:
+            return 2
+        res = list(self.__reports.find({"rep_addr":address_as_json['rep_addr']}))
+        print 'db/database.py: search report done'
+        return res
+
+    def unread(self):
+        """Search for all unread reports
+        """
+        res = list(self.__reports.find({'tag':0}))
+        self.__reports.update_many({'tag':0}, {'$set':{'tag':1}})
+        print 'db/database.py: search for unread reps done'
+        return res
+
+
 # class dbtest(object):
 
 #     def __init__(self):
-#         print 'db/database.py: test loaded'
+#         print 'db/database.py: '
 
 #     def scoreSaveOne(self, parameter):
 #         obj = scoredb
@@ -96,6 +146,19 @@ if __name__ == "__main__":
         elif sys.argv[1] == 'scorequery':
             obj = scoredb()
             print obj.queryOne(json.loads(sys.argv[2]))
+
+        elif sys.argv[1] == 'repsave':
+            obj = reportdb()
+            print obj.saveOne(json.loads(sys.argv[2]))
+        elif sys.argv[1] == 'repread':
+            obj = reportdb()
+            print obj.readAddr(json.loads(sys.argv[2]))
+        elif sys.argv[1] == 'repsearch':
+            obj = reportdb() 
+            print obj.searchAddr(json.loads(sys.argv[2]))
+        elif sys.argv[1] == 'repunread':
+            obj = reportdb() 
+            print obj.unread()
         else:
             print 'db/database.py: wrong format'
 
