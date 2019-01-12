@@ -124,6 +124,32 @@ class reportApiHandler(tornado.web.RequestHandler):
     def post(self):
         self.write({"httpstatus":200, "msg":"method not supported", "method":"post"})
         
+class catchReportHandler(tornado.web.RequestHandler):
+
+    def get(self):
+        print 'server.py: Info: catchReportHandler: GET request from {}'.format(self.request.remote_ip)
+        self.write({"httpstatus":200, "msg":"method not supported", "method":"get"})
+
+    def post(self):
+        import json
+        from db import database
+        user_ip = self.request.remote_ip
+        
+        catch_type = json.loads(self.request.body)["type"]
+        print 'server.py: Info: catchReportHandler: POST request from {} with type [{}]'.format(user_ip, 
+                                                                                        catch_type)
+        reportObj = database.reportdb()
+        if catch_type == 'address':
+            raw_res = reportObj.readAddr({"rep_addr": json.loads(self.request.body)["address"]})
+        else:
+            raw_res = reportObj.unread()
+
+        for every in raw_res:
+            del every['_id']
+            # del raw_res['tag']
+
+        self.write({"httpstatus":200, "msg":"query done", "method":"post", "result":raw_res})
+
 
 class updateApiHandler(tornado.web.RequestHandler):
 
@@ -153,7 +179,8 @@ def startApp():
         (config.wxHandlerUrl, wxHandler),
         (config.scoreApiHandlerUrl, scoreApiHandler),
         (config.reportApiHandlerUrl, reportApiHandler),
-        (config.updateApiHandlerUrl, updateApiHandler)
+        (config.updateApiHandlerUrl, updateApiHandler),
+        (config.catchReportHandlerUrl, catchReportHandler)
     ])
 
 if __name__ == "__main__":
