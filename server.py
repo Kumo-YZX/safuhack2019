@@ -132,7 +132,20 @@ class updateApiHandler(tornado.web.RequestHandler):
         self.write({"httpstatus":200, "msg":"method not supported", "method":"get"})
     
     def post(self):
-        self.write({"httpstatus":200, "msg":"method not supported", "method":"post"})
+        import json
+        user_ip = self.request.remote_ip
+        update_account_address = json.loads(self.request.body)["address"]
+        update_account_score = json.loads(self.request.body)["score"]
+        print 'server.py: Info: updateApiHandler: POST request from {} with address:[{}] score:[{}]'.format(user_ip, 
+                                                                                                    update_account_address, 
+                                                                                                    update_account_score)
+        from db import database
+        scoreObj = database.scoredb()
+        if scoreObj.queryOne({"address":json.loads(self.request.body)["address"]}) is None:
+            scoreObj.saveOne(json.loads(self.request.body))
+        else:
+            scoreObj.updateOne(json.loads(self.request.body))
+        self.write({"httpstatus":200, "msg":"update score done", "method":"post"})
 
 def startApp():
     return tornado.web.Application([
