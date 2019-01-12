@@ -122,7 +122,20 @@ class reportApiHandler(tornado.web.RequestHandler):
         self.write({"httpstatus":200, "msg":"method not supported", "method":"get"})
     
     def post(self):
-        self.write({"httpstatus":200, "msg":"method not supported", "method":"post"})
+        import json
+        from db import database
+        user_ip = self.request.remote_ip
+
+        report_data = json.loads(self.request.body)
+        reportObj = database.reportdb()
+        print 'server.py: Info: reportApiHandler: POST request from {} with report [{}]'.format(user_ip, 
+                                                                                        self.request.body)
+        save_result = reportObj.saveOne(report_data)
+        if save_result == 1:
+            rep_msg = "Report about {} has been saved, thank you".format(report_data["rep_addr"])
+            self.write({"httpstatus":200, "msg":rep_msg, "method":"post"})
+        else:
+            self.write({"httpstatus":200, "msg":"wrong foramt", "method":"post"})
         
 class catchReportHandler(tornado.web.RequestHandler):
 
