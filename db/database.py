@@ -61,6 +61,16 @@ class scoredb(dbbase):
         print 'db/database.py: query scoredb done'
         return res
 
+    def updateOne(self, score_as_json):
+        try:
+            score_as_json['address']
+            score_as_json['score']
+        except KeyError:
+            return 2
+        self.__scores.update_one({"address":score_as_json["address"]}, {'$set':{"score":score_as_json["score"]}})
+        print 'db/database.py: scoredb update one done'
+        return 1
+
 # class dbtest(object):
 
 #     def __init__(self):
