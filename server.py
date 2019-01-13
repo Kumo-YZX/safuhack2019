@@ -22,6 +22,7 @@ class testHandler(tornado.web.RequestHandler):
 class wxHandler(tornado.web.RequestHandler):
 
     def get(self):
+        # verify that the server is useable, checked by wechat.
         print 'server.py: Info: WxHandler: GET request from {}'.format(self.request.remote_ip)
 
         requestDict = self.request.query
@@ -58,6 +59,8 @@ class wxHandler(tornado.web.RequestHandler):
             nonce = self.get_query_arguments("nonce")[0]
             msgSign = self.get_query_arguments("msg_signature")[0]
 
+            # decrypt data, using module provided by wechat platform.
+
             decStatus, wxData = decryptObj.DecryptMsg(self.request.body, msgSign, stamp, nonce)
             if decStatus:
                 print 'server.py: Error: decrypt fail'
@@ -70,7 +73,7 @@ class wxHandler(tornado.web.RequestHandler):
                     toUser = recData.FromUserName
                     fromUser = recData.ToUserName
                     word = recData.Content
-
+                    #parse the msg
                     parseObj = parse.parseMsg(toUser, word)
                     content = parseObj.replyWord()
                 else:
